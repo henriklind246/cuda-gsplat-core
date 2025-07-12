@@ -1,24 +1,19 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.25)
 project(cuda_gsplat_core LANGUAGES CXX CUDA)
 
-# Set standards
-set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CXX_STANDARD 17)
-
-# Optional: use CUDA fast math
-option(CUDA_FAST_MATH "Enable fast math optimizations" ON)
-if (CUDA_FAST_MATH)
-  target_compile_options(gsplat_core PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--use_fast_math>)
-endif()
-
-# Add your source files here
-add_executable(gsplat_core
-    src/main.cpp
+# 1. Create the target **before** you tweak it
+add_library(gsplat_core STATIC
     src/rasterize_points.cu
+    src/main.cpp         # placeholder driver
 )
 
-# Optional: set target properties
-set_target_properties(gsplat_core PROPERTIES
-    CUDA_SEPARABLE_COMPILATION ON
-    CUDA_ARCHITECTURES 86 # Adjust if needed
+# 2. Tell CMake where the public headers live
+target_include_directories(gsplat_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# 3. Choose language standards
+target_compile_features(gsplat_core PUBLIC cxx_std_20 cuda_std_20)
+
+# 4. Add any extra flags (now the target exists, so this is safe)
+target_compile_options(gsplat_core PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:--use_fast_math>
 )
